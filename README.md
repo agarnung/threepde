@@ -41,7 +41,7 @@ We use Three.js via CDN for both development and production, specified in index.
 
 We use GitHub Actions to detect pushes to main and automatically minify all JS files in src/ to assets/js/main.min.js — i.e., to minify and deploy the website. This keeps the src/ code intact and only uploads the final optimized version to GitHub Pages, where it is served. This project is served via GitHub Pages, which delivers only static content (HTML, CSS, JS) with no backend required. In contrast, platforms like PythonAnywhere use Flask to run Python servers generating dynamic content. That’s why no backend is needed or configured here.
 
-We should commit our entire src/, index.html, public/ and the YAML (workflow) file, to keep track of them, but not the dist/, because this is a temporary directvory were we copy the "ready-to-publish" files (we use a PAT with `workflow` permisson enabled).
+We should commit our entire src/, index.html, public/ and the YAML (workflow) file, to keep track of them, but not the dist/, because this is a temporary directvory were we copy the "ready-to-publish" files (we create a custom repo PAT with `workflow` permisson enabled).
 
 ```yaml
 name: Deploy to GitHub Pages
