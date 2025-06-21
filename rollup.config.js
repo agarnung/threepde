@@ -6,7 +6,7 @@ export default {
   output: {
     file: 'dist/assets/js/bundle.min.js',
     format: 'es', // Use ES modules
-    sourcemap: true
+    sourcemap: false
   },
   plugins: [
     nodeResolve(),
