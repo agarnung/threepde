@@ -29,12 +29,7 @@ jobs:
           mkdir -p dist/public/css
           mkdir -p dist/public/images
           mkdir -p dist/assets/js
-
-      - name: Copy static files
-        run: |
-          cp index.html dist/
-          cp public/favicon.ico dist/
-          cp -r public/images/* dist/public/images/
+          cp -r public/* dist/public/
 
       - name: Bundle and minify JavaScript with Rollup
         run: |
@@ -46,8 +41,10 @@ jobs:
 
       - name: Update HTML references
         run: |
+          cp index.html dist/
           sed -i 's/public\/css\/styles.css/public\/css\/styles.min.css/' dist/index.html
-          sed -i 's/src\/main.js/assets\/js\/bundle.min.js/' dist/index.html
+          sed -i 's|src/main.js|assets/js/bundle.min.js|' dist/index.html
+          sed -i 's|type="module" src="src/main.js"|src="assets/js/bundle.min.js"|' dist/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

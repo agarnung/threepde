@@ -184,3 +184,5 @@ In contrast, constant-chrominance mode (useOriginalRGB = false) combines the evo
 - Add a paragraph about the original "lab mode". Explain that in "mantle mode" the image remains intact (meaning "mantle mode" really means "keep original colors" mode, while the non-mantle mode means "keep original chrominance" mode).
 
 - Allow users to select the heightmap size? Either by specifying width and height or by width or height while maintaining aspect ratio (not forced 512x512).
+
+- Fix bundle and minification to serve `gh-pages` instead of `main` branch.

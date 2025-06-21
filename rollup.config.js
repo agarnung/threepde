@@ -1,17 +1,16 @@
-// rollup.config.js
-import resolve from '@rollup/plugin-node-resolve';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 
 export default {
-  input: 'src/main.js',  // Ajusta según tu archivo principal
+  input: 'src/main.js',
   output: {
     file: 'dist/assets/js/bundle.min.js',
-    format: 'iife',       // Bundle en formato autoejecutable para navegador
-    name: 'App',
+    format: 'es', // Use ES modules
     sourcemap: true
   },
   plugins: [
-    resolve(),
+    nodeResolve(),
     commonjs()
-  ]
+  ],
+  external: ['three'] // Keep Three.js as external since we are using CDN
 };
