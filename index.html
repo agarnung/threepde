@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <title>𝝅𝓟𝓓𝓔</title>
+    <link rel="icon" href="./public/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="public/css/styles.min.css">
+    <script type="importmap">
+    {
+        "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.module.js",
+        "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.132.2/examples/jsm/"
+        }
+    }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/url-polyfill@1.1.13/url-polyfill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stats-js@1.0.1/build/stats.min.js"></script>
+  </head>
+
+  <body>
+    <div id="main-container">
+        <section id="input-section">
+            <fieldset class="input-group">
+                <legend>Input Parameters</legend>
+                
+                <!-- Checkboxes -->
+                <div class="input-wrapper checkbox-group">
+                    <input type="checkbox" id="run-check" name="run" unchecked/>
+                    <label for="run-check">Run</label>
+                </div>
+
+                <div class="input-wrapper checkbox-group">
+                    <input type="checkbox" id="mesh-check" name="wirmesheframe" checked/>
+                    <label for="mesh-check">Show Mesh</label>
+                </div>
+
+                <div class="input-wrapper checkbox-group">
+                    <input type="checkbox" id="wireframe-check" name="wireframe" checked/>
+                    <label for="wireframe-check">Show wireframe</label>
+                </div>
+
+                <div class="speed-tooltip-container">
+                <label for="speed-slider">
+                    Velocity:
+                    <div id="speed-tooltip">
+                    Note: Velocity controls simulation speed, not solver's timestep.
+                    </div>
+                </label>
+                </div>
+                <div class="velocity-container">
+                <input type="range" id="speed-slider" min="1" max="99" step="1" value="50">
+                <span id="velocity-value">50</span>
+                </div>
+
+                <!-- Select: Color Map -->
+                <div class="input-wrapper">
+                    <label for="colormap-select">Color map:</label>
+                    <select id="colormap-select" name="colormap"> 
+                        <option value="" disabled hidden>--Select an option--</option>
+                        <option value="constant">Constant</option>
+                        <option value="graymap">Grayscale</option>
+                        <!-- useOriginalRGB = true == realmente es como si la malla fuera "un mantel" de la imagen, pues los 
+                             colores RGB se mantienen originales (en este "modo mantel", la imagen lógicamente no 
+                             puede funcionar como la malla..., pues no tiene altura. Es el "modo mantel"; la imagen queda intacta -->
+                        <option value="constant-color">Constant color</option>
+                        <!-- useOriginalRGB = false == el color cambia según el L de la altura actual y el ab de la iamgen original -->
+                        <option value="constant-chrominance">Constant chrominance</option>
+                        <option value="jetcmap">Jet</option>
+                        <option value="viridiscmap">Viridis</option>
+                        <option value="infernocmap">Inferno</option>
+                        <option value="seismiccmap">Seismic</option>
+                        <option value="RdYlBucmap">RdYlBu</option>
+                    </select>
+                </div>
+
+                <!-- Select: PDE -->
+                <div class="input-wrapper">
+                    <label for="pde-select">PDE:</label>
+                    <select id="pde-select" name="pde">
+                        <option value="" disabled hidden>--Select an option--</option>
+                        <option value="heat">Heat</option>
+                        <option value="wave">Wave</option>
+                        <option value="exponential-decay">Exponential decay</option>
+                    </select>
+                </div>
+
+                <!-- Select: Boundary Condition -->
+                <div class="input-wrapper">
+                    <label for="boundary-select">Boundary condition:</label>
+                    <select id="boundary-select" name="boundary">
+                        <option value="" disabled hidden>--Select an option--</option>
+                        <option value="dirichlet">Dirichlet (fixed value)</option>
+                        <option value="zero">Zero (Dirichlet with u = 0)</option>
+                        <option value="fixed">Fixed (Dirichlet with u₀'s ∂Ω)</option>
+                        <option value="neumann">Neumann (fixed derivative)</option>
+                        <option value="reflective">Reflective (Neumann with ∂u/∂n = 0)</option>
+                        <option value="periodic">Periodic (edges connect seamlessly)</option>
+                        <option value="robin">Robin (mixed Dirichlet + Neumann)</option>
+                        <!-- <option value="mixed">Mixed (Different types on different boundaries)</option>
+                        <option value="cauchy">Cauchy (General first-order condition)</option> -->
+                    </select>
+                </div>
+
+                <!-- Select: Discretization Method -->
+                <div class="input-wrapper">
+                    <label for="scheme-select">Discretization scheme:</label>
+                    <select id="scheme-select" name="scheme">
+                        <option value="" disabled hidden>--Select an option--</option>
+                        <option value="forward-euler">Forward Euler (Explicit)</option>
+                        <option value="backward-euler">Backward Euler (Implicit)</option>
+                        <!-- <option value="semi-implicit">Semi-Implicit (Mixed)</option>
+                        <option value="crank-nicholson">Crank-Nicholson (Implicit)</option>
+                        <option value="forward-backward-euler">Forward-Backward Euler (Semi-Implicit)</option> -->
+                    </select>
+                </div>
+
+                <!-- File Input -->
+                <div class="input-wrapper">
+                    <label for="file-upload">Select an image:</label>
+                    <input type="file" id="file-upload" name="image" accept="image/*" />
+                </div>
+            </fieldset>
+
+            <div class="buttons-container">
+                <div class="info-button-wrapper">
+                    <div class="info-button">ⓘ</div>
+                    <div id="tooltip" class="tooltip hidden">
+                    Welcome!<br>
+                    Press (E) to enter pseudo-full screen mode.<br>
+                    Press (R) run/stop simulation.<br>
+                    Press (S) to save the current image.<br>
+                    Press (N) to normalize height each step (mere visual effect).<br>
+                    Press <strong>⟳</strong> to return to initial conditions.<br>
+                    </div>
+                </div>
+                <div class="reset-button-wrapper">
+                    <div id="reset-button" class="reset-button">⟳</div>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="equations-section" style="visibility:hidden; padding: 0;  margin: 0;  top: 0;">
+        <h2>Current PDE</h2>
+        <p>
+            $$ \frac{\partial u}{\partial t} = \alpha \nabla^2 u $$
+        </p>
+        </section>
+
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>
+        window.onload = () => {
+            MathJax.typesetPromise()
+            .then(() => {
+                document.getElementById('equations-section').style.visibility = 'visible';
+            });
+        };
+        </script>
+
+        <section id="canvas2d-section">
+            <div class="canvas2d-wrapper">
+                <div><canvas id="canvas2d"></canvas></div>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="canvas3d-container">
+        <canvas id="canvas3d"></canvas>
+    </div>
+
+    <div id="normalization-indicator">Normalization ON</div>
+
+    <script type="module" src="assets/js/bundle.min.js"></script>
+  </body>
+</html>
