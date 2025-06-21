@@ -2,6 +2,8 @@
 
 A 3D visualization of image evolution under partial differential equations
 
+[![Deploy to GitHub Pages](https://github.com/agarnung/threepde/actions/workflows/deploy.yml/badge.svg?branch=main&event=page_build)](https://github.com/agarnung/threepde/actions/workflows/deploy.yml)
+
 # Summary
 
 The input images must be WebP format, since RGBA is read. Converting a monochrome image to WebP and then passing it to the web is valid.
