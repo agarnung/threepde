@@ -1,0 +1,37 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install -g terser
+
+      - name: Build and Minify
+        run: |
+          mkdir -p dist/assets/js
+          mkdir -p dist/assets/css
+          cp index.html dist/
+          cp -r public/images dist/images
+          cp public/favicon.ico dist/
+          
+          # Minify JS
+          npx terser "src/**/*.js" -c -m -o dist/assets/js/main.min.js
+
+          # Minify CSS
+          npx cleancss -o dist/assets/css/styles.min.css public/css/styles.css
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: dist
