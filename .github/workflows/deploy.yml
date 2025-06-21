@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: npm install -g terser clean-css-cli
+        run: npm install -g clean-css-cli terser
 
       - name: Build and Minify
         run: |
@@ -34,7 +34,7 @@ jobs:
           rm dist/assets/js/all.js
       
           # Minificar CSS
-          npx clean-css -o dist/assets/css/styles.min.css public/css/styles.css
+          npx cleancss -o dist/public/css/styles.min.css public/css/styles.css
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
