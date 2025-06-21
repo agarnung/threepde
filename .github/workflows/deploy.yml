@@ -13,28 +13,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install dependencies
         run: npm install -g clean-css-cli terser
 
-      - name: Build and Minify
+      - name: Prepare dist structure
         run: |
+          mkdir -p dist/public/css
+          mkdir -p dist/public/images
           mkdir -p dist/assets/js
-          mkdir -p dist/assets/css
+
+      - name: Copy static files
+        run: |
           cp index.html dist/
-          cp -r public/images dist/images
           cp public/favicon.ico dist/
-      
-          # Concatenar todos los JS en uno solo temporalmente
-          cat src/**/*.js > dist/assets/js/all.js
-      
-          # Minificar el archivo concatenado
-          npx terser dist/assets/js/all.js -c -m -o dist/assets/js/main.min.js
-      
-          # Borrar archivo temporal
-          rm dist/assets/js/all.js
-      
-          # Minificar CSS
-          npx cleancss -o dist/public/css/styles.min.css public/css/styles.css
+          cp -r public/images/* dist/public/images/
+
+      - name: Minify and bundle JavaScript
+        run: |
+          cat src/*.js src/helpers/*.js > dist/assets/js/bundle.js
+          terser dist/assets/js/bundle.js -c -m -o dist/assets/js/bundle.min.js
+          rm dist/assets/js/bundle.js
+
+      - name: Minify CSS
+        run: |
+          cleancss public/css/styles.css -o dist/public/css/styles.min.css
+
+      - name: Update HTML references
+        run: |
+          sed -i 's/public\/css\/styles.css/public\/css\/styles.min.css/' dist/index.html
+          sed -i 's/src\/main.js/assets\/js\/bundle.min.js/' dist/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
