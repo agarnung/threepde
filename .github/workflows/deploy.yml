@@ -23,11 +23,17 @@ jobs:
           cp index.html dist/
           cp -r public/images dist/images
           cp public/favicon.ico dist/
-          
-          # Minify JS
-          npx terser "src/**/*.js" -c -m -o dist/assets/js/main.min.js
-
-          # Minify CSS
+      
+          # Concatenar todos los JS en uno solo temporalmente
+          cat src/**/*.js > dist/assets/js/all.js
+      
+          # Minificar el archivo concatenado
+          npx terser dist/assets/js/all.js -c -m -o dist/assets/js/main.min.js
+      
+          # Borrar archivo temporal
+          rm dist/assets/js/all.js
+      
+          # Minificar CSS
           npx cleancss -o dist/assets/css/styles.min.css public/css/styles.css
 
       - name: Deploy to GitHub Pages
