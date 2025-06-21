@@ -22,6 +22,7 @@ jobs:
         run: |
           npm install -g rollup
           npm install --save-dev rollup @rollup/plugin-node-resolve @rollup/plugin-commonjs
+          npm install -g clean-css-cli
 
       - name: Prepare dist structure
         run: |
