@@ -18,8 +18,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install -g clean-css-cli terser
+    - name: Install dependencies
+      run: |
+        npm install -g rollup
+        npm install --save-dev rollup @rollup/plugin-node-resolve @rollup/plugin-commonjs
 
       - name: Prepare dist structure
         run: |
@@ -33,11 +35,9 @@ jobs:
           cp public/favicon.ico dist/
           cp -r public/images/* dist/public/images/
 
-      - name: Minify and bundle JavaScript
+      - name: Bundle and minify JavaScript with Rollup
         run: |
-          cat src/*.js src/helpers/*.js > dist/assets/js/bundle.js
-          terser dist/assets/js/bundle.js -c -m -o dist/assets/js/bundle.min.js
-          rm dist/assets/js/bundle.js
+          npx rollup -c rollup.config.js --bundleConfigAsCjs
 
       - name: Minify CSS
         run: |
