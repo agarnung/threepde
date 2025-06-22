@@ -4,7 +4,62 @@ A 3D visualization of image evolution under partial differential equations
 
 [![Deploy to GitHub Pages](https://github.com/agarnung/threepde/actions/workflows/deploy.yml/badge.svg?branch=main&event=page_build)](https://github.com/agarnung/threepde/actions/workflows/deploy.yml)
 
-# Summary
+A few captures:
+
+<img src="./assets/1.png" alt="Imagen 1" width="600" style="display: block; margin: 0 auto;" />
+
+<img src="./assets/2.png" alt="Imagen 2" width="600" style="display: block; margin: 0 auto;" />
+
+<img src="./assets/3.png" alt="Imagen 3" width="600" style="display: block; margin: 0 auto;" />
+
+# Usage
+
+**Basic Interaction**
+- Upload your own images (WebP-friendly formats)
+- Toggle mesh/wireframe visibility
+- Adjust simulation speed with slider
+- Save current image
+
+**Main Options**
+- **Color maps**:
+  - `constant` (uniform color)
+  - `graymap` (grayscale)
+  - `constant-color` (original RGB)
+  - `constant-chrominance` (height L + original ab)
+  - Presets: `jet`, `viridis`, `inferno`, `seismic`, `RdYlBu`
+
+- **Available PDEs**:
+  - Heat equation
+  - Wave equation
+  - Exponential decay (ODE)
+
+- **Boundary conditions**:
+  - Dirichlet (fixed value)
+  - Neumann (fixed derivative)
+  - Periodic
+  - Robin (mixed)
+  - Special cases
+
+**Keyboard Shortcuts**
+| Key  | Action                |
+|------|-----------------------|
+| E    | Toggle 3D fullscreen  |
+| R    | Run/Pause simulation  |
+| S    | Save current image    |
+| N    | Toggle normalization  |
+| ⟳    | Reset simulation      |
+
+**Basic Usage**
+1. Select image (or use default)
+2. Configure parameters:
+   - PDE type
+   - Boundary condition
+   - Color map
+   - ...
+3. Enable simulation with `Run` checkbox or press (R)
+4. Enjoy solving the PDE in your image 
+
+# Technical notes about actions
 
 The input images must be WebP format, since RGBA is read. Converting a monochrome image to WebP and then passing it to the web is valid.
 
