@@ -243,3 +243,5 @@ In contrast, constant-chrominance mode (useOriginalRGB = false) combines the evo
 - Allow users to select the heightmap size? Either by specifying width and height or by width or height while maintaining aspect ratio (not forced 512x512).
 
 - Fix bundle and minification to serve `gh-pages` instead of `main` branch.
+
+- Habilitar como GPU ON/OFF para algunas sino todas las PDE (i.e. computarlas en shaders).
