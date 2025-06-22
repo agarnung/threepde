@@ -17,7 +17,7 @@ let currentImageData; // Imagen en cada paso, que se muestra en canvas2d
 let needToUpdate = false; 
 let meshGroup; // Mesh + wireframe
 let toggledE = false; // Modo pantalla pseudo-completa con la tecla E
-let currentColormapId = 'viridis'
+let currentColormapId = 'viridiscmap'
 let originalWidth, originalHeight;
 let originalL = null;
 let originala = null;
@@ -677,7 +677,7 @@ window.addEventListener('load', () => {
 
     fileUpload.value = '';
 
-    document.getElementById('colormap-select').value = 'viridis';
+    document.getElementById('colormap-select').value = 'viridiscmap';
     document.getElementById('pde-select').value = 'wave';
     document.getElementById('boundary-select').value = 'reflective';
     document.getElementById('scheme-select').value = 'forward-euler';
