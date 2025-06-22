@@ -6,11 +6,13 @@ A 3D visualization of image evolution under partial differential equations
 
 A few captures:
 
-<img src="./assets/1.png" alt="Imagen 1" width="600" style="display: block; margin: 0 auto;" />
-
-<img src="./assets/2.png" alt="Imagen 2" width="600" style="display: block; margin: 0 auto;" />
-
-<img src="./assets/3.png" alt="Imagen 3" width="600" style="display: block; margin: 0 auto;" />
+<p align="center">
+  <img src="./assets/1.png" alt="Imagen 1" width="600" />
+  <br />
+  <img src="./assets/2.png" alt="Imagen 2" width="600" />
+  <br />
+  <img src="./assets/3.png" alt="Imagen 3" width="600" />
+</p>
 
 # Usage
 
