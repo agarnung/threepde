@@ -4,6 +4,8 @@ A 3D visualization of image evolution under partial differential equations
 
 [![Deploy to GitHub Pages](https://github.com/agarnung/threepde/actions/workflows/deploy.yml/badge.svg?branch=main&event=page_build)](https://github.com/agarnung/threepde/actions/workflows/deploy.yml)
 
+Want to know more about this field? Check many more interesting PDEs applied to images: [image-inpainting-app](https://www.researchgate.net/publication/387140474_Physics_Meets_Pixels_PDE_Models_in_Image_Processing/stats) and [Physics Meets Pixels: PDE Models in Image Processing](https://arxiv.org/abs/2412.11946).
+
 A few captures:
 
 <p align="center">
@@ -215,12 +217,12 @@ The ES6 version (three.module.js) is used with an import map, and not the UMD (t
 
 We also use Stats.js (from CDN) to display FPS.
 
-To be precise, exponential decay is an ODE, not a PDE, so there is no spatial propagation and no CFL condition is required, but it does have a stability condition. For many more interesting PDEs applied to images, see [image-inpainting-app](https://www.researchgate.net/publication/387140474_Physics_Meets_Pixels_PDE_Models_in_Image_Processing/stats) and [Physics Meets Pixels: PDE Models in Image Processing](https://arxiv.org/abs/2412.11946).
-
 > [!NOTE]
 > Whatever the input image type, PDEs are solved using the luminance channel (even if RGB values are shown on top; the evolution is governed by the monochrome intensity here).
 
 To learn more about boundary conditions: https://en.wikipedia.org/wiki/Boundary_value_problem#Examples. And check more discretization schemes: [forward Euler, backward Euler, Crank-Nicholson, forward-backward Euler, etc.](https://en.wikipedia.org/wiki/Explicit_and_implicit_methods).
+
+To be precise, exponential decay is an ODE, not a PDE, so there is no spatial propagation and no CFL condition is required, but it does have a stability condition. 
 
 In constant-color mode (useOriginalRGB = true), the RGB colors of the image remain completely unchanged — this is like placing the original image as a mantle over the mesh. The surface has no color evolution; the image looks intact. It no longer truly behaves like a heightmap, since the mesh is essentially just being draped with the image as a texture. All heightmap cells share the same color, which looks uniform and gray but is preserved to emphasize colormap functionality. Only in this mode does the 2D canvas display the image at original resolution because the solver does not alter intensity pixel-by-pixel. Other modes downsample images to 512×512 to optimize solver performance.
 
