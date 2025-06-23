@@ -34,12 +34,14 @@ export class Solver {
         dt = 0.1,
         pdeType = 'heat',
         boundaryType = 'periodic',
-        schemeType = 'forward-euler'
+        schemeType = 'forward-euler',
+        useGPU = 'false'
     }) {
         this.width = imageData.width;
         this.height = imageData.height;
         this.deltaPx = deltaPx;
         this.dt = dt;
+        this.useGPU = useGPU;
 
         // Parámetros específicos de PDEs
         this.c = 50.0;
@@ -453,6 +455,10 @@ export class Solver {
         } else {
             console.warn(`Tipo de esquema no válido: ${newSchemeType}`);
         }
+    }
+
+    setUseGPU(useGPU) {
+        this.useGPU = useGPU;
     }
 
     calculateCoefficient() {

@@ -205,7 +205,8 @@ function initializeSimulation() {
         dt: 0.005,
         pdeType: document.getElementById('pde-select').value || 'heat',
         boundaryType: document.getElementById('boundary-select').value || 'reflective',
-        schemeType: document.getElementById('scheme-select').value || 'forward-euler'
+        schemeType: document.getElementById('scheme-select').value || 'forward-euler',
+        useGPU: false
     });
 
     updateVisuals(currentImageData);
@@ -741,18 +742,18 @@ const key = event.key.toLowerCase();
   }
 
     if (key === 'g') {
-    useGPUSolver = !useGPUSolver;
+        useGPUSolver = !useGPUSolver;
 
-    const gpuIndicator = document.getElementById('gpu-solver-indicator');
-    if (useGPUSolver && 
-        document.getElementById('pde-select').value === 'wave'
-        && document.getElementById('scheme-select').value === 'forward-euler' 
-        && document.getElementById('boundary-select').value === 'reflective') {
-        gpuIndicator.style.display = 'block';
-    } else {
-        gpuIndicator.style.display = 'none';
+        const gpuIndicator = document.getElementById('gpu-solver-indicator');
+        if (useGPUSolver && 
+            document.getElementById('pde-select').value === 'wave'
+            && document.getElementById('scheme-select').value === 'forward-euler' 
+            && document.getElementById('boundary-select').value === 'reflective') {
+            gpuIndicator.style.display = 'block';
+        } else {
+            gpuIndicator.style.display = 'none';
+        }
     }
-  }
 
   if (key === 'ñ') {
     console.log("¡Has descubierto un easter egg! Entre tú y yo: aplica la ecuación de calor con Constant Color, condiciones Zero, y descubrirás el modo 'cojín'");
