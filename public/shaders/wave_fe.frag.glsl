@@ -4,6 +4,8 @@ uniform sampler2D currentState; // Amplitud actual del píxel de la imagen
 uniform sampler2D previousState; // Amplitud en el instante anterior del píxel de la imagen
 uniform float coeff; // Coeficiente de la PDE discretizada
 uniform int boundaryType; // 0 = periodic, 1 = reflective
+uniform int width;
+uniform int height;
 
 // Coordenadas de textura (UV) que vienen desde el vertex shader hacia el fragment shader
 // Las variables varying se usan para pasar información del vertex shader al fragment shader
@@ -14,10 +16,6 @@ varying vec2 vUv;
 
 // Función principal del shader
 void main() {
-    ivec2 size = textureSize(currentState, 0); // Tamaño de la textura actual en coordenadas UV
-    int width = size.x;
-    int height = size.y;
-
     // Convertir las coordenadas UV normalizadas a coordenadas de píxel enteras
     ivec2 coord = ivec2(vUv * vec2(width, height)); 
     

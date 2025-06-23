@@ -70,8 +70,10 @@ export function createHeightMesh(heightMapFlat, subdivisionsX, subdivisionsY, no
     max = sortedHeights[Math.floor(sortedHeights.length * 0.95)];
   } else {
     // Usando mínimo y máximo absolutos
-    min = Math.min(...heightMapFlat);
-    max = Math.max(...heightMapFlat);
+    // min = Math.min(...heightMapFlat);
+    // max = Math.max(...heightMapFlat);
+    max = heightMapFlat.reduce((a, b) => Math.max(a, b), -Infinity);
+    min = heightMapFlat.reduce((a, b) => Math.min(a, b), Infinity);
   }
   range = max - min || 1; // Evitar división por cero
 

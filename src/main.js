@@ -45,6 +45,22 @@ const resetButton = document.getElementById("reset-button");
 const velocitySlider = document.getElementById('speed-slider');
 const velocityValue = document.getElementById('velocity-value');
 
+function isWebGL2Supported() {
+    try {
+        const canvas = document.createElement('canvas');
+        return !!(window.WebGL2RenderingContext && canvas.getContext('webgl2'));
+    } catch (e) {
+        return false;
+    }
+}
+
+if (!isWebGL2Supported()) {
+    console.error("[Main] WebGL2 no disponible - GPU deshabilitada");
+    useGPUSolver = false;
+} else {
+    console.log("[Main] WebGL2 disponible");
+}
+
 // Configuración canvas 2D
 const canvas2d = document.getElementById("canvas2d");
 const ctx2d = canvas2d.getContext("2d");
@@ -301,8 +317,10 @@ function updateMeshGeometry(heightMapFlat) {
     if (normalizeHeights) {
         // Cálculo de rango dinámico (sin percentiles... ver createHeightMesh())
         let min, max, range;
-        min = Math.min(...heightMapFlat);
-        max = Math.max(...heightMapFlat);
+        // min = Math.min(...heightMapFlat);
+        // max = Math.max(...heightMapFlat);
+        max = heightMapFlat.reduce((a, b) => Math.max(a, b), -Infinity);
+        min = heightMapFlat.reduce((a, b) => Math.min(a, b), Infinity);
         range = max - min || 1; // Evitar división por cero
 
         // Actualizar directamente la componente Z (altura) en el array con normalización

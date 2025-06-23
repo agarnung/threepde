@@ -280,6 +280,10 @@ export class Solver {
         return this.denormalizeToImageData(this.currentState);
     }
 
+    stepWaveEquationFE_GPU() {
+        //...
+    }
+
     stepExpDecayEquation() {
         // Ecuación de decaimiento exponencial: ∂u/∂t = -λu = f(u, t)
         for (let y = 0; y < this.height; y++) {
@@ -540,5 +544,32 @@ export class Solver {
         this.currentState = this.deepCopyMatrix(this.normalizeImageData(this.imageData));  // u_k = u_0
         this.previousState = this.deepCopyMatrix(this.currentState); // u_prev = u_k
         this.nextState = this.createZeroMatrix();
+    }
+    
+    async loadShaders() {
+        // Desarrollo
+        const response = await fetch('shaders/wave_fe.frag.glsl');
+        // Producción
+        // const response = await fetch('public/shaders/wave_fe.frag.glsl');
+        const fragmentShader = await response.text();
+        
+        return new THREE.ShaderMaterial({
+            uniforms: {
+                currentState: { value: null },
+                previousState: { value: null },
+                width: { value: this.width },
+                height: { value: this.height },
+                coeff: { value: this.coeff },
+                boundaryType: { value: this.boundaryType === Solver.BOUNDARY_TYPES.PERIODIC ? 0 : 1 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = vec4(position.xy, 0.0, 1.0);
+                }
+            `,
+            fragmentShader
+        });
     }
 }
