@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export class Solver {
     // Tipos de PDEs a resolver
     static PDE_TYPES = {
@@ -75,6 +77,8 @@ export class Solver {
 
         // Normalizar imagen
         this.imageData = this.cloneImageData(imageData);
+
+        // Inicializar el solver ya sea en CPU o GPU
         this.reset();
 
         // Guardar estado original para condiciones FIXED

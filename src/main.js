@@ -748,10 +748,13 @@ const key = event.key.toLowerCase();
         if (useGPUSolver && 
             document.getElementById('pde-select').value === 'wave'
             && document.getElementById('scheme-select').value === 'forward-euler' 
-            && document.getElementById('boundary-select').value === 'reflective') {
+            && 
+            (document.getElementById('boundary-select').value === 'periodic' || document.getElementById('boundary-select').value === 'reflective')) {
             gpuIndicator.style.display = 'block';
+            solver.setUseGPU(true);
         } else {
             gpuIndicator.style.display = 'none';
+            solver.setUseGPU(false);
         }
     }
 
