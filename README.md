@@ -247,3 +247,5 @@ In contrast, constant-chrominance mode (useOriginalRGB = false) combines the evo
 - Fix bundle and minification to serve `gh-pages` instead of `main` branch.
 
 - Habilitar como GPU ON/OFF para algunas sino todas las PDE (i.e. computarlas en shaders). Inspirarse en: https://chrisboligprojects.pythonanywhere.com/vertexWaves.
+
+- Para interpolar valores de color de la imagen a la malla, usar [perspective-correct interpolation](https://stackoverflow.com/questions/17537879/in-webgl-what-are-the-differences-between-an-attribute-a-uniform-and-a-varying).
