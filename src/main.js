@@ -28,6 +28,7 @@ let originalB_ = null;
 let normalizeHeights = false; // Normalización de la altura de la malla en cada paso (efecto visual)
 let lastTime = 0;
 let speedAnimation = 50;
+let useGPUSolver = false;
 
 // Enlaczar elementos UI
 const wireframeCheck = document.getElementById("wireframe-check");
@@ -737,7 +738,21 @@ const key = event.key.toLowerCase();
     } else {
         indicator.style.display = 'none';
     }
+  }
+
+    if (key === 'g') {
+    useGPUSolver = !useGPUSolver;
+
+    const gpuIndicator = document.getElementById('gpu-solver-indicator');
+    if (useGPUSolver && 
+        document.getElementById('pde-select').value === 'wave'
+        && document.getElementById('scheme-select').value === 'forward-euler' 
+        && document.getElementById('boundary-select').value === 'reflective') {
+        gpuIndicator.style.display = 'block';
+    } else {
+        gpuIndicator.style.display = 'none';
     }
+  }
 
   if (key === 'ñ') {
     console.log("¡Has descubierto un easter egg! Entre tú y yo: aplica la ecuación de calor con Constant Color, condiciones Zero, y descubrirás el modo 'cojín'");
