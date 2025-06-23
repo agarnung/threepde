@@ -731,30 +731,35 @@ const key = event.key.toLowerCase();
   }
   
     if (key === 'n') {
-    normalizeHeights = !normalizeHeights;
+        normalizeHeights = !normalizeHeights;
 
-    const indicator = document.getElementById('normalization-indicator');
-    if (normalizeHeights) {
-        indicator.style.display = 'block';
-    } else {
-        indicator.style.display = 'none';
+        const indicator = document.getElementById('normalization-indicator');
+        if (normalizeHeights) {
+            indicator.style.display = 'block';
+        } else {
+            indicator.style.display = 'none';
+        }
     }
-  }
 
     if (key === 'g') {
+        const wasUsingGPU = useGPUSolver;
         useGPUSolver = !useGPUSolver;
-
+        
+        const isGPUCompatible = (
+            document.getElementById('pde-select').value === 'wave' &&
+            document.getElementById('scheme-select').value === 'forward-euler' &&
+            ['periodic', 'reflective'].includes(document.getElementById('boundary-select').value)
+        );
+        
         const gpuIndicator = document.getElementById('gpu-solver-indicator');
-        if (useGPUSolver && 
-            document.getElementById('pde-select').value === 'wave'
-            && document.getElementById('scheme-select').value === 'forward-euler' 
-            && 
-            (document.getElementById('boundary-select').value === 'periodic' || document.getElementById('boundary-select').value === 'reflective')) {
-            gpuIndicator.style.display = 'block';
-            solver.setUseGPU(true);
+        gpuIndicator.style.display = isGPUCompatible && useGPUSolver ? 'block' : 'none';
+        
+        // Solo cambiar si es compatible
+        if (isGPUCompatible || !useGPUSolver) {
+            solver.setUseGPU(isGPUCompatible && useGPUSolver);
         } else {
-            gpuIndicator.style.display = 'none';
-            solver.setUseGPU(false);
+            // Revertir cambio si no es compatible
+            useGPUSolver = wasUsingGPU;
         }
     }
 
