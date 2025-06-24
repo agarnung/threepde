@@ -14,7 +14,7 @@ let Nx = 256, Ny = 256;
 let meshGeometry; // Dónde están los vértices de tu superficie 3D que representan la altura de cada píxel
 let positionAttribute; // Buffer (que el solver utiliza) que guarda los coordenadas (x, y, z) de cada vértice 
 let currentImageData; // Imagen en cada paso, que se muestra en canvas2d
-let needToUpdate = false; 
+let needToUpdate = false;
 let meshGroup; // Mesh + wireframe
 let toggledE = false; // Modo pantalla pseudo-completa con la tecla E
 let currentColormapId = 'viridiscmap'
@@ -76,6 +76,52 @@ const ctx2d = canvas2d.getContext("2d");
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x121212);
 
+// ==================================================
+// INITIALIZE GPU VARIABLES
+// ==================================================
+// Escena y cámara para visualizar la textura si se usa GPU
+const sceneView = new THREE.Scene();
+const cameraView = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+let meshView;
+cameraView.position.z = 1;
+sceneView.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+// ShaderMaterial para visualizar la textura del solver
+const displayMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        tex: { value: null },
+        textureSize: { value: new THREE.Vector2(Nx, Ny) }
+    },
+    vertexShader: `
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        uniform sampler2D tex;
+        varying vec2 vUv;
+        
+        void main() {
+            // Muestrear la textura usando coordenadas UV
+            vec4 color = texture2D(tex, vUv);
+            
+            // Para visualización de escala de grises
+            float gray = color.r;
+            gl_FragColor = vec4(gray, gray, gray, 1.0);
+        }
+    `
+});
+
+// Asegurar que el quad ocupe toda la pantalla
+const quad = new THREE.PlaneGeometry(2, 2);
+meshView = new THREE.Mesh(quad, displayMaterial);
+sceneView.add(meshView);
+// ==================================================
+// END INITIALIZE GPU VARIABLES
+// ==================================================
+
 // Configurar luz 
 const light = new THREE.DirectionalLight(0xffffff, 0.75);
 light.position.set(0, 5, 0);
@@ -90,7 +136,7 @@ camera.position.set(5, 7.5, 5);
 
 // Configurar el renderer WebGL con nuestro canvas
 const canvas3d = document.getElementById("canvas3d");
-const renderer = new THREE.WebGLRenderer({ 
+const renderer = new THREE.WebGLRenderer({
     antialias: false, // Disable antialiasing for better performance
     canvas: canvas3d,
     powerPreference: "high-performance" // Prioritize performance over power saving
@@ -145,10 +191,10 @@ scene.add(axes.z);
 const stats = new Stats();
 stats.showPanel(0); // 0 = FPS, 1 = ms, 2 = MB, 3 = custom
 stats.dom.style.position = 'fixed';
-stats.dom.style.left = 'auto';    
-stats.dom.style.top = 'auto';   
-stats.dom.style.right = '0px';   
-stats.dom.style.bottom = '0px';  
+stats.dom.style.left = 'auto';
+stats.dom.style.top = 'auto';
+stats.dom.style.right = '0px';
+stats.dom.style.bottom = '0px';
 stats.dom.classList.add('stats');
 document.body.appendChild(stats.dom);
 // ==================================================
@@ -165,46 +211,74 @@ function animate(time = 0) {
 
     controls.update();
 
-    const thresholdToHighSpeed = 50;
     if (runSimulation && solver) {
-        if (speedAnimation === 0) {
-            // No avanza la simulación
-        } else if (speedAnimation <= thresholdToHighSpeed) {
-            // Más lento, ejecuta cada cierto tiempo
-            // Intervalo entre pasos: de 1000 ms (speed=1) a 20 ms (speed=thresholdToHighSpeed)
-            const maxInterval = 1000;
-            const minInterval = 20;
-            const interval = maxInterval - ((speedAnimation - 1) / (thresholdToHighSpeed - 1)) * (maxInterval - minInterval);
-            
-            if (time - lastTime > interval) {
-                currentImageData = solver.step();
+        if (useGPUSolver) {
+            // Modo GPU: ejecutar pasos de simulación
+            if (speedAnimation > 0) {
+                solver.step();
                 needToUpdate = true;
-                lastTime = time;
             }
         } else {
-            // Más rápido, ejecuta varios pasos por frame
-            // stepsPerFrame: de 1 (speed=thresholdToHighSpeed) a 10 (speed=100)
-            const minSteps = 1;
-            const maxSteps = 10;
-            const stepsPerFrame = Math.round(minSteps + ((speedAnimation - (thresholdToHighSpeed + 1)) / (thresholdToHighSpeed - 1)) * (maxSteps - minSteps));
-            
-            for (let i = 0; i < stepsPerFrame; i++) {
-                currentImageData = solver.step();
+            const thresholdToHighSpeed = 50;
+            if (runSimulation && solver) {
+                if (speedAnimation === 0) {
+                    // No avanza la simulación
+                } else if (speedAnimation <= thresholdToHighSpeed) {
+                    // Más lento, ejecuta cada cierto tiempo
+                    // Intervalo entre pasos: de 1000 ms (speed=1) a 20 ms (speed=thresholdToHighSpeed)
+                    const maxInterval = 1000;
+                    const minInterval = 20;
+                    const interval = maxInterval - ((speedAnimation - 1) / (thresholdToHighSpeed - 1)) * (maxInterval - minInterval);
+
+                    if (time - lastTime > interval) {
+                        currentImageData = solver.step();
+                        needToUpdate = true;
+                        lastTime = time;
+                    }
+                } else {
+                    // Más rápido, ejecuta varios pasos por frame
+                    // stepsPerFrame: de 1 (speed=thresholdToHighSpeed) a 10 (speed=100)
+                    const minSteps = 1;
+                    const maxSteps = 10;
+                    const stepsPerFrame = Math.round(minSteps + ((speedAnimation - (thresholdToHighSpeed + 1)) / (thresholdToHighSpeed - 1)) * (maxSteps - minSteps));
+
+                    for (let i = 0; i < stepsPerFrame; i++) {
+                        currentImageData = solver.step();
+                    }
+                    needToUpdate = true;
+                }
             }
-            needToUpdate = true;
         }
     }
 
     if (needToUpdate) {
         // Update simulation
-        updateVisuals(currentImageData);
-        positionAttribute.needsUpdate = true;
-        meshGeometry.computeVertexNormals();
+        if (!useGPUSolver) {
+            // CPU: actualizar canvas y geometría
+            updateVisuals(currentImageData);
+            positionAttribute.needsUpdate = true;
+            meshGeometry.computeVertexNormals();
+        } else {
+            if (needToUpdate && useGPUSolver) {
+                const outputTexture = solver.getOutputTexture?.(); // o solver.outputTexture
+                if (outputTexture) {
+                    // GPU: no usamos updateVisuals, solo actualizamos la textura que vamos a mostrar
+                    displayMaterial.uniforms.tex.value = outputTexture;
+
+                    // Forzar actualización del material
+                    displayMaterial.needsUpdate = true;
+                }
+            }
+        }
         needToUpdate = false;
     }
 
     // Render main scene
-    renderer.render(scene, camera);
+    if (!useGPUSolver) {
+        renderer.render(scene, camera); // Escena 3D con malla
+    } else {
+        renderer.render(sceneView, cameraView); // Mostrar textura directamente desde la GPU
+    }
 
     stats.end();
 
@@ -238,10 +312,10 @@ function createSampleImage() {
     const canvas = document.createElement('canvas');
     canvas.width = Nx;
     canvas.height = Ny;
-    
+
     // Usar el contexto del canvas temporal, no el global ctx2d
     const ctx = canvas.getContext('2d');
-    
+
     // Fondo degradado
     const gradient = ctx.createRadialGradient(Nx / 2, Ny / 2, 0, Nx / 2, Ny / 2, Nx / 2);
     gradient.addColorStop(0, '#444');
@@ -272,7 +346,7 @@ function updateVisuals(imageData) {
     const heightMapFlat = getHeightMapFromImageData(imageData, Nx, Ny);
 
     // Aplicar colormap SOLO para visualización y actualizar canvas 2D con imagen coloreada
-    if (currentColormapId === 'constant-color') { 
+    if (currentColormapId === 'constant-color') {
         // Construir ImageData con RGB original
         const totalPixels = originalWidth * originalHeight;
         const imgDataArray = new Uint8ClampedArray(totalPixels * 4);
@@ -296,7 +370,7 @@ function updateVisuals(imageData) {
         meshGroup = createHeightMesh(heightMapFlat, Nx, Ny, false, 1, false, false);
         scene.add(meshGroup);
         const mesh = meshGroup.getObjectByName('mesh');
-        if (mesh) mesh.visible = meshCheck.checked; 
+        if (mesh) mesh.visible = meshCheck.checked;
         meshGeometry = mesh.geometry;
         positionAttribute = meshGeometry.attributes.position;
         const wireframe = meshGroup.getObjectByName("wireframe"); // Configurar wireframe inicial
@@ -372,7 +446,7 @@ function updateCanvas2D(imageData) {
 
 function updateMeshColors(heightMapFlat, colormapId) {
     if (!meshGeometry || !meshGeometry.attributes.color) return;
-    
+
     if (!meshGeometry.attributes.color) { // Si no existe el atributo color, lo creamos
         const colors = new Float32Array(Nx * Ny * 3);
         meshGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
@@ -390,7 +464,7 @@ function updateMeshColors(heightMapFlat, colormapId) {
                 // Calcular posición relativa en la imagen original
                 const relX = i / (Nx - 1);
                 const relY = j / (Ny - 1);
-                
+
                 // Mapear a coordenadas de la imagen original, de tamaño originalWidthxoriginalHeight
                 const origX = Math.floor(relX * (originalWidth - 1));
                 const origY = Math.floor(relY * (originalHeight - 1));
@@ -433,7 +507,7 @@ function updateMeshColors(heightMapFlat, colormapId) {
             }
         }
     }
-    
+
     colorAttribute.needsUpdate = true;
 }
 
@@ -493,7 +567,7 @@ function handleImageUpload(event) {
 
     const reader = new FileReader();
 
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         const imgElement = new Image();
         imgElement.onload = () => {
             // Guardar dimensiones ORIGINALES
@@ -508,9 +582,9 @@ function handleImageUpload(event) {
             originalb = bData;
 
             const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d'); 
-            canvas.width = originalWidth;  
-            canvas.height = originalHeight; 
+            const ctx = canvas.getContext('2d');
+            canvas.width = originalWidth;
+            canvas.height = originalHeight;
             ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
             const originalRGB = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const totalPixels = originalWidth * originalHeight;
@@ -518,7 +592,7 @@ function handleImageUpload(event) {
             originalG = new Float32Array(totalPixels);
             originalB_ = new Float32Array(totalPixels);
             for (let i = 0; i < totalPixels; i++) {
-                originalR[i] = originalRGB.data[i * 4];      
+                originalR[i] = originalRGB.data[i * 4];
                 originalG[i] = originalRGB.data[i * 4 + 1];
                 originalB_[i] = originalRGB.data[i * 4 + 2];
             }
@@ -585,7 +659,7 @@ function setInitialCondition() {
 
 function updateEquationDisplay(pdeType) {
     const equationSection = document.getElementById('equations-section');
-    
+
     if (pdeType === 'heat') {
         equationSection.innerHTML = `
             <h2>Current PDE</h2>
@@ -608,7 +682,7 @@ function updateEquationDisplay(pdeType) {
             </p>
         `;
     }
-    
+
     // Volver a renderizar MathJax
     MathJax.typesetPromise();
 }
@@ -620,7 +694,7 @@ function saveImage() {
     tempCanvas.height = originalHeight;
     const tempCtx = tempCanvas.getContext('2d');
 
-    
+
     // Generar los datos de imagen según el colormap actual
     if (currentColormapId === 'constant-color') {
         // Construir ImageData con RGB original
@@ -633,37 +707,37 @@ function saveImage() {
         }
         const originalRGBImageData = new ImageData(imgDataArray, originalWidth, originalHeight);
         tempCtx.putImageData(originalRGBImageData, 0, 0);
-    } 
+    }
     else if (currentColormapId === 'constant-chrominance') {
         // Obtener heightmap actual
         const heightMapFlat = getHeightMapFromImageData(currentImageData, Nx, Ny);
-        
+
         // Generar imagen Lab a resolución original
         const labImageData = applyOriginalLabColormapToImageFullRes(
-            heightMapFlat, 
-            originala, 
-            originalb, 
-            originalWidth, 
+            heightMapFlat,
+            originala,
+            originalb,
+            originalWidth,
             originalHeight,
             Nx,
             Ny
         );
         tempCtx.putImageData(labImageData, 0, 0);
-    } 
+    }
     else {
         // Para otros colormaps, escalamos la imagen actual a la resolución original
         const coloredImageData = applyColormap(currentImageData, currentColormapId);
-        
+
         // Crear un canvas temporal para el escalado
         const tempCanvas2 = document.createElement('canvas');
         tempCanvas2.width = currentImageData.width;
         tempCanvas2.height = currentImageData.height;
         const tempCtx2 = tempCanvas2.getContext('2d');
         tempCtx2.putImageData(coloredImageData, 0, 0);
-        
+
         // Dibujar escalado al tamaño original
         tempCtx.drawImage(tempCanvas2, 0, 0, originalWidth, originalHeight);
-    }   
+    }
 
     let filename = prompt('Enter the file name (without extension):', `image_${tempCanvas.width}x${tempCanvas.height}`);
     if (!filename) return;
@@ -710,49 +784,49 @@ window.addEventListener('load', () => {
 });
 
 window.addEventListener('keydown', (event) => {
-const key = event.key.toLowerCase();
+    const key = event.key.toLowerCase();
 
-  if (key === 'e') {
-    toggledE = !toggledE;
+    if (key === 'e') {
+        toggledE = !toggledE;
 
-    if (toggledE) {
-      // Modo pantalla completa 3D
-      canvas3dContainer.style.position = 'fixed';
-      canvas3dContainer.style.top = '0';
-      canvas3dContainer.style.left = '0';
-      canvas3dContainer.style.width = '100vw';
-      canvas3dContainer.style.height = '100vh';
-      canvas3dContainer.style.zIndex = '9999';
+        if (toggledE) {
+            // Modo pantalla completa 3D
+            canvas3dContainer.style.position = 'fixed';
+            canvas3dContainer.style.top = '0';
+            canvas3dContainer.style.left = '0';
+            canvas3dContainer.style.width = '100vw';
+            canvas3dContainer.style.height = '100vh';
+            canvas3dContainer.style.zIndex = '9999';
 
-      // Ocultar todo lo demás
-      document.getElementById('main-container').style.display = 'none';
-      document.getElementById('canvas2d-section').style.display = 'none';
-    } else {
-      // Volver a modo normal
-      canvas3dContainer.style.position = '';
-      canvas3dContainer.style.top = '';
-      canvas3dContainer.style.left = '';
-      canvas3dContainer.style.width = '';
-      canvas3dContainer.style.height = '';
-      canvas3dContainer.style.zIndex = originalZ;
+            // Ocultar todo lo demás
+            document.getElementById('main-container').style.display = 'none';
+            document.getElementById('canvas2d-section').style.display = 'none';
+        } else {
+            // Volver a modo normal
+            canvas3dContainer.style.position = '';
+            canvas3dContainer.style.top = '';
+            canvas3dContainer.style.left = '';
+            canvas3dContainer.style.width = '';
+            canvas3dContainer.style.height = '';
+            canvas3dContainer.style.zIndex = originalZ;
 
-      document.getElementById('main-container').style.display = '';
-      document.getElementById('canvas2d-section').style.display = '';
+            document.getElementById('main-container').style.display = '';
+            document.getElementById('canvas2d-section').style.display = '';
+        }
+
+        axes.x.visible = !axes.x.visible;
+        axes.y.visible = !axes.y.visible;
+        axes.z.visible = !axes.z.visible;
     }
 
-    axes.x.visible = !axes.x.visible;
-    axes.y.visible = !axes.y.visible;
-    axes.z.visible = !axes.z.visible;
-  }
+    if (key === 'r') {
+        runCheck.click();
+    }
 
-  if (key === 'r') {
-    runCheck.click();
-  }
-  
-  if (key === 's') {
-    saveImage();
-  }
-  
+    if (key === 's') {
+        saveImage();
+    }
+
     if (key === 'n') {
         normalizeHeights = !normalizeHeights;
 
@@ -767,16 +841,16 @@ const key = event.key.toLowerCase();
     if (key === 'g') {
         const wasUsingGPU = useGPUSolver;
         useGPUSolver = !useGPUSolver;
-        
+
         const isGPUCompatible = (
             ['wave', 'heat'].includes(document.getElementById('pde-select').value) &&
             document.getElementById('scheme-select').value === 'forward-euler' &&
             ['periodic', 'reflective'].includes(document.getElementById('boundary-select').value)
         );
-        
+
         const gpuIndicator = document.getElementById('gpu-solver-indicator');
         gpuIndicator.style.display = isGPUCompatible && useGPUSolver ? 'block' : 'none';
-        
+
         // Solo cambiar si es compatible
         if (isGPUCompatible || !useGPUSolver) {
             solver.setUseGPU(isGPUCompatible && useGPUSolver);
@@ -786,9 +860,9 @@ const key = event.key.toLowerCase();
         }
     }
 
-  if (key === 'ñ') {
-    console.log("¡Has descubierto un easter egg! Entre tú y yo: aplica la ecuación de calor con Constant Color, condiciones Zero, y descubrirás el modo 'cojín'");
-  }
+    if (key === 'ñ') {
+        console.log("¡Has descubierto un easter egg! Entre tú y yo: aplica la ecuación de calor con Constant Color, condiciones Zero, y descubrirás el modo 'cojín'");
+    }
 });
 
 function isWebGL2Supported() {

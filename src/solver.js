@@ -105,6 +105,17 @@ export class Solver {
     }
 
     step() {
+            if (this.useGPU && this.gpuReady) {
+            switch (this.pdeType) {
+                case Solver.PDE_TYPES.HEAT:
+                    if (this.schemeType === Solver.SCHEME_TYPES.FORWARD_EULER) {
+                        this.stepHeatEquationFE_GPU();
+                    }
+                    break;
+                //...
+            }
+            return null; // No devuelve ImageData en modo GPU
+        } else {
         if (this.pdeType === Solver.PDE_TYPES.HEAT) {
             return this.stepHeatEquation();
         } else if (this.pdeType === Solver.PDE_TYPES.WAVE) {
@@ -112,6 +123,8 @@ export class Solver {
         } else {
             return this.stepExpDecayEquation();
         }
+        }
+        
     }
 
     stepHeatEquation() {
@@ -285,66 +298,107 @@ export class Solver {
     }
 
     initializeGPU() {
-        console.log("[GPU] Iniciando verificación GPU con Three.js/WebGL...");
-
-        // Verificación básica de WebGL
-        if (!window.WebGLRenderingContext) {
-            console.error("[GPU] WebGLRenderingContext no está disponible en este navegador.");
-            return;
-        } else {
-            console.log("[GPU] WebGLRenderingContext detectado.");
-        }
-
-        // Probar si se puede obtener un contexto WebGL real
-        const canvas = document.createElement('canvas');
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-        if (!gl) {
-            console.error("[GPU] No se pudo obtener un contexto WebGL.");
-            return;
-        } else {
-            console.log("[GPU] Contexto WebGL creado correctamente.");
-        }
-
-        // Crear renderer de Three.js
-        let renderer;
-        try {
-            renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
-            console.log("[GPU] THREE.WebGLRenderer inicializado.");
-        } catch (e) {
-            console.error("[GPU] Error al crear THREE.WebGLRenderer:", e);
+        if (!this.renderer) {
+            console.error("Renderer no disponible para GPU");
+            this.useGPU = false;
             return;
         }
 
-        // Verificar soporte de render targets
-        try {
-            const rt = new THREE.WebGLRenderTarget(4, 4); // render target pequeñito
-            renderer.setRenderTarget(rt);
-            console.log("[GPU] RenderTarget de prueba creado exitosamente.");
-        } catch (e) {
-            console.error("[GPU] Error al crear RenderTarget:", e);
-            return;
-        }
+        // Crear render targets para ping-pong
+        this.renderTargetA = new THREE.WebGLRenderTarget(this.width, this.height, {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.NearestFilter,
+            format: THREE.RGBAFormat,
+            type: THREE.FloatType
+        });
+        
+        this.renderTargetB = new THREE.WebGLRenderTarget(this.width, this.height, {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.NearestFilter,
+            format: THREE.RGBAFormat,
+            type: THREE.FloatType
+        });
 
-        // Información de la GPU (si está disponible)
-        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        if (debugInfo) {
-            const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-            const rendererName = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-            console.log(`[GPU] Info GPU: ${vendor} - ${rendererName}`);
-        } else {
-            console.warn("[GPU] No se pudo obtener información detallada de la GPU (WEBGL_debug_renderer_info no disponible).");
-        }
+        this.currentRenderTarget = this.renderTargetA;
+        this.nextRenderTarget = this.renderTargetB;
 
-        console.log("[GPU] Verificación de GPU con Three.js completada con éxito.");
+        this.initializeTexture(this.renderTargetA);
+        this.initializeTexture(this.renderTargetB);
 
-        //...
+        // Crear geometría y escena para renderizado interno
+        // Estas variables no son para visualizar los resultados, sino para realizar los cálculos
+        // de la simulación en la GPU (off-screen). En gpuMesh se ejecuta realmente el fragment shader
+        this.gpuScene = new THREE.Scene();
+        this.gpuCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const quad = new THREE.PlaneGeometry(2, 2);
+        this.gpuMesh = new THREE.Mesh(quad);
+        this.gpuScene.add(this.gpuMesh);
 
-        //console.log(GPU inicialada correctamente)
+        // Cargar shaders
+        this.loadShaders().then(material => {
+            this.gpuMaterial = material;
+            this.gpuMesh.material = material;
+            this.gpuReady = true;
+            console.log("GPU inicializada correctamente");
+        }).catch(error => {
+            console.error("Error al cargar shaders:", error);
+            this.useGPU = false;
+        });
     }
+
+initializeTexture(renderTarget) {
+    // Crear un canvas temporal con la imagen inicial
+    const imageData = this.denormalizeToImageData(this.currentState);
+    const canvas = document.createElement('canvas');
+    canvas.width = this.width;
+    canvas.height = this.height;
+    const ctx = canvas.getContext('2d');
+    ctx.putImageData(imageData, 0, 0);
+    
+    // Crear una textura temporal
+    const tempTexture = new THREE.CanvasTexture(canvas);
+    
+    // Renderizar la textura temporal en el render target
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const quad = new THREE.PlaneGeometry(2, 2);
+    const material = new THREE.MeshBasicMaterial({ map: tempTexture });
+    const mesh = new THREE.Mesh(quad, material);
+    scene.add(mesh);
+    
+    this.renderer.setRenderTarget(renderTarget);
+    this.renderer.render(scene, camera);
+    this.renderer.setRenderTarget(null);
+    
+    // Limpiar recursos temporales
+    material.dispose();
+    quad.dispose();
+    tempTexture.dispose();
+}
 
     stepHeatEquationFE_GPU() {
         // Enfoque ping-pong entre dos texturas (curr, next)
-        // ...
+
+                if (!this.gpuReady) return;
+        
+        // Configurar render target
+        this.renderer.setRenderTarget(this.nextRenderTarget);
+        
+        // Actualizar uniforms
+        this.gpuMaterial.uniforms.currentState.value = this.currentRenderTarget.texture;
+        this.gpuMaterial.uniforms.coeff.value = this.coeff;
+        this.gpuMaterial.uniforms.width.value = this.width;
+        this.gpuMaterial.uniforms.height.value = this.height;
+        this.gpuMaterial.uniforms.boundaryType.value = 
+            this.boundaryType === Solver.BOUNDARY_TYPES.PERIODIC ? 0 : 1;
+
+        // Renderizar paso de simulación
+        this.renderer.render(this.gpuScene, this.gpuCamera);
+        this.renderer.setRenderTarget(null);
+        
+        // Intercambiar buffers (ping-pong)
+        [this.currentRenderTarget, this.nextRenderTarget] = 
+            [this.nextRenderTarget, this.currentRenderTarget];
     }
 
     stepWaveEquationFE_GPU() {
@@ -626,10 +680,9 @@ export class Solver {
         // resetear lo relativo a la GPU también...
         this.initializeGPU();
     }
-
     async loadShaders() {
         const isProduction = false;
-        const basePath = isProduction ? 'public/' : '';
+        const basePath = isProduction ? 'public/' : 'public/';
 
         let shaderFile;
         if (this.pdeType === Solver.PDE_TYPES.WAVE) {
@@ -677,5 +730,9 @@ export class Solver {
             console.error(`Error cargando el shader: ${shaderFile}`, error);
             throw error;
         }
+    }
+
+    getOutputTexture() {
+        return this.currentRenderTarget.texture;
     }
 }
