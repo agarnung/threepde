@@ -546,11 +546,28 @@ export class Solver {
         this.nextState = this.createZeroMatrix();
     }
     
-    async loadShaders() {
-        // Desarrollo
-        const response = await fetch('shaders/wave_fe.frag.glsl');
-        // Producción
-        // const response = await fetch('public/shaders/wave_fe.frag.glsl');
+async loadShaders() {
+    const isProduction = false;
+    const basePath = isProduction ? 'public/' : '';
+    
+    let shaderFile;
+    if (this.pdeType === Solver.PDE_TYPES.WAVE) {
+        shaderFile = `${basePath}shaders/wave_fe.frag.glsl`;
+    } else if (this.pdeType === Solver.PDE_TYPES.HEAT) {
+        if (this.schemeType === Solver.SCHEME_TYPES.FORWARD_EULER) {
+            shaderFile = `${basePath}shaders/heat_fe.frag.glsl`;
+        } else {
+            shaderFile = `${basePath}shaders/heat_be.frag.glsl`;
+        }
+    } else if (this.pdeType === Solver.PDE_TYPES.EXPONENTIAL_DECAY) {
+        shaderFile = `${basePath}shaders/exp_decay.frag.glsl`;
+    } else {
+        console.warn(`Tipo de PDE no reconocido: ${this.pdeType}. Usando ecuación de calor por defecto.`);
+        shaderFile = `${basePath}shaders/heat_fe.frag.glsl`;
+    }
+
+    try {
+        const response = await fetch(shaderFile);
         const fragmentShader = await response.text();
         
         return new THREE.ShaderMaterial({
@@ -560,7 +577,11 @@ export class Solver {
                 width: { value: this.width },
                 height: { value: this.height },
                 coeff: { value: this.coeff },
-                boundaryType: { value: this.boundaryType === Solver.BOUNDARY_TYPES.PERIODIC ? 0 : 1 }
+                boundaryType: { 
+                    value: this.boundaryType === Solver.BOUNDARY_TYPES.PERIODIC ? 0 : 
+                          (this.boundaryType === Solver.BOUNDARY_TYPES.REFLECTIVE ? 1 : 2)
+                },
+                dt: { value: this.dt }
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -571,5 +592,9 @@ export class Solver {
             `,
             fragmentShader
         });
+    } catch (error) {
+        console.error(`Error cargando el shader: ${shaderFile}`, error);
+        throw error;
     }
+}
 }

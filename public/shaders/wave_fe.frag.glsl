@@ -1,7 +1,7 @@
-precision highp float; // Cuánta precisión flotante usa la GPU { highp , mediump , lowp }
+precision mediump float; // Cuánta precisión flotante usa la GPU { highp , mediump , lowp }
 
-uniform sampler2D currentState; // Amplitud actual del píxel de la imagen
-uniform sampler2D previousState; // Amplitud en el instante anterior del píxel de la imagen
+uniform sampler2D currentState; // Amplitud actual del píxel de la imagen (buffer de entrada)
+uniform sampler2D previousState; // Amplitud en el instante anterior del píxel de la imagen (buffer de entrada)
 uniform float coeff; // Coeficiente de la PDE discretizada
 uniform int boundaryType; // 0 = periodic, 1 = reflective
 uniform int width;
@@ -54,8 +54,8 @@ void main() {
     float up_val = texture2D(currentState, uv_up).r;
     float down_val = texture2D(currentState, uv_down).r;
 
-    // Leer el valor muestreando desde la textura anterior
-    float prev = texture2D(previousState, uv).r;
+    // Leer el valor muestreando desde la textura anterior (leer buffer de entrada)
+    float prev = texture2D(previousState, uv).r; 
     
     // Calcular laplaciano
     float laplacian = left_val + right_val + up_val + down_val - 4.0 * center;
@@ -63,6 +63,6 @@ void main() {
     // Ecuación de onda: u^{n+1} = 2u^n - u^{n-1} + c^2 * dt^2 * ∇²u
     float next = 2.0 * center - prev + coeff * laplacian;
     
-    // Escribir el resultado como un color RGBA, donde el R contiene la info. útil
+    // Escribir el resultado para este fragemnto/píxel como un color RGBA, donde el R contiene la info. útil (buffer de salida)
     gl_FragColor = vec4(next, 0.0, 0.0, 1.0);
 }
