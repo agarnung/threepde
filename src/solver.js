@@ -37,13 +37,15 @@ export class Solver {
         pdeType = 'heat',
         boundaryType = 'periodic',
         schemeType = 'forward-euler',
-        useGPU = false
+        useGPU = false,
+        renderer = null // Renderer de Three.js
     }) {
         this.width = imageData.width;
         this.height = imageData.height;
         this.deltaPx = deltaPx;
         this.dt = dt;
         this.useGPU = useGPU;
+        this.gpuReady = false; 
 
         // Parámetros específicos de PDEs
         this.c = 50.0;

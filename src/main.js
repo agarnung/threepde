@@ -765,7 +765,7 @@ const key = event.key.toLowerCase();
         useGPUSolver = !useGPUSolver;
         
         const isGPUCompatible = (
-            document.getElementById('pde-select').value === 'wave' &&
+            ['wave', 'heat'].includes(document.getElementById('pde-select').value) &&
             document.getElementById('scheme-select').value === 'forward-euler' &&
             ['periodic', 'reflective'].includes(document.getElementById('boundary-select').value)
         );

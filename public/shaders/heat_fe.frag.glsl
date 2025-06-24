@@ -1,7 +1,7 @@
 precision mediump float;
 
 uniform sampler2D currentState; // Estado actual (u^n) (buffer de entrada)
-uniform float diffusionCoeff;   // Coeficiente de difusión (α * Δt / Δx²)
+uniform float coeff;   // Coeficiente de difusión (α * Δt / Δx²)
 uniform float dt;               
 uniform int boundaryType;       // 0 = periódico, 1 = reflectivo
 uniform int width;
@@ -46,7 +46,7 @@ void main() {
 
     float laplacian = left_val + right_val + up_val + down_val - 4.0 * center;
     
-    float next = center + diffusionCoeff * laplacian;
+    float next = center + coeff * laplacian;
     
     gl_FragColor = vec4(next, 0.0, 0.0, 1.0); // (buffer de salida)
 }
