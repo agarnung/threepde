@@ -37,7 +37,7 @@ export class Solver {
         pdeType = 'heat',
         boundaryType = 'periodic',
         schemeType = 'forward-euler',
-        useGPU = 'false'
+        useGPU = false
     }) {
         this.width = imageData.width;
         this.height = imageData.height;
@@ -63,13 +63,14 @@ export class Solver {
         // Verificar condición de estabilidad solo para esquemas explícitos
         if (this.schemeType === Solver.SCHEME_TYPES.FORWARD_EULER) {
             if (this.pdeType === Solver.PDE_TYPES.HEAT && this.coeff > 0.5) {
-                console.warn(`¡Condición de estabilidad no satisfecha para ecuación de calor! (${this.coeff} > 0.5). La simulación puede ser inestable. Considera usar otro esquema.`);
+                console.warn(`¡Condición CFL no satisfecha para ecuación de calor! (${this.coeff} > 0.5). La simulación puede ser inestable. Considera usar otro esquema.`);
             }
 
             if (this.pdeType === Solver.PDE_TYPES.WAVE && this.coeff > 1.0) {
-                console.warn(`¡Condición de CFL no satisfecha para ecuación de onda! (${Math.sqrt(this.coeff)} > 1). La simulación puede ser inestable. Considera usar otro esquema.`);
+                console.warn(`¡Condición CFL no satisfecha para ecuación de onda! (${Math.sqrt(this.coeff)} > 1). La simulación puede ser inestable. Considera usar otro esquema.`);
             }
 
+            // Exponential decay es ODE, no PDE, por lo que no tiene condición CFL, pero sí de estabilidad
             if (this.pdeType === Solver.PDE_TYPES.EXPONENTIAL_DECAY && this.dt > 2 / this.lambda) {
                 console.warn(`¡Condición de estabilidad no satisfecha para decaimiento exponencial! (${this.dt} > 2/λ). La simulación puede ser inestable.`);
             }

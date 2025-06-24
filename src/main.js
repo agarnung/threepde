@@ -143,6 +143,7 @@ document.body.appendChild(stats.dom);
 
 // Bucle de animación principal, que se llama continuamente gracias a requestAnimationFram, que pide que se 
 // ejecute la función que se le pase antes del siguiente repintado de pantalla.
+// El solver debería devolver un ImageData tanto en CPU como en GPU
 function animate(time = 0) {
     stats.begin();
 
