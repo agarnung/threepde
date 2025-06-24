@@ -45,15 +45,22 @@ const resetButton = document.getElementById("reset-button");
 const velocitySlider = document.getElementById('speed-slider');
 const velocityValue = document.getElementById('velocity-value');
 
-function isWebGL2Supported() {
-    try {
-        const canvas = document.createElement('canvas');
-        return !!(window.WebGL2RenderingContext && canvas.getContext('webgl2'));
-    } catch (e) {
-        return false;
-    }
-}
+// Event listeners
+window.addEventListener('resize', handleResize);
+wireframeCheck.addEventListener("change", toggleWireframe);
+meshCheck.addEventListener("change", toggleMesh);
+runCheck.addEventListener("change", toggleRun);
+fileUpload.addEventListener('change', handleImageUpload);
+boundarySelect.addEventListener("change", handleBoundaryChange);
+pdeSelect.addEventListener("change", handlePDEChange);
+schemeSelect.addEventListener("change", handleSchemeChange);
+colormapSelect.addEventListener("change", handleColormapChange);
+resetButton.addEventListener("click", setInitialCondition);
+velocitySlider.addEventListener("input", setVelocity);
 
+// ==================================================
+// INITIALIZE APPLICATION
+// ==================================================
 if (!isWebGL2Supported()) {
     console.error("[Main] WebGL2 no disponible - GPU deshabilitada");
     useGPUSolver = false;
@@ -140,6 +147,11 @@ stats.dom.style.right = '0px';
 stats.dom.style.bottom = '0px';  
 stats.dom.classList.add('stats');
 document.body.appendChild(stats.dom);
+// ==================================================
+// END INITIALIZE APPLICATION
+// ==================================================
+
+animate();
 
 // Bucle de animación principal, que se llama continuamente gracias a requestAnimationFram, que pide que se 
 // ejecute la función que se le pase antes del siguiente repintado de pantalla.
@@ -195,21 +207,6 @@ function animate(time = 0) {
     // Request next frame immediately
     requestAnimationFrame(animate);
 }
-
-animate();
-
-// Event listeners
-window.addEventListener('resize', handleResize);
-wireframeCheck.addEventListener("change", toggleWireframe);
-meshCheck.addEventListener("change", toggleMesh);
-runCheck.addEventListener("change", toggleRun);
-fileUpload.addEventListener('change', handleImageUpload);
-boundarySelect.addEventListener("change", handleBoundaryChange);
-pdeSelect.addEventListener("change", handlePDEChange);
-schemeSelect.addEventListener("change", handleSchemeChange);
-colormapSelect.addEventListener("change", handleColormapChange);
-resetButton.addEventListener("click", setInitialCondition);
-velocitySlider.addEventListener("input", setVelocity);
 
 // Helper functions
 function initializeSimulation() {
@@ -789,3 +786,12 @@ const key = event.key.toLowerCase();
     console.log("¡Has descubierto un easter egg! Entre tú y yo: aplica la ecuación de calor con Constant Color, condiciones Zero, y descubrirás el modo 'cojín'");
   }
 });
+
+function isWebGL2Supported() {
+    try {
+        const canvas = document.createElement('canvas');
+        return !!(window.WebGL2RenderingContext && canvas.getContext('webgl2'));
+    } catch (e) {
+        return false;
+    }
+}
