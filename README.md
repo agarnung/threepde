@@ -249,3 +249,5 @@ In contrast, constant-chrominance mode (useOriginalRGB = false) combines the evo
 - Habilitar como GPU ON/OFF para algunas sino todas las PDE (i.e. computarlas en shaders). Inspirarse en: https://chrisboligprojects.pythonanywhere.com/vertexWaves.
 
 - Para interpolar valores de color de la imagen a la malla, usar [perspective-correct interpolation](https://stackoverflow.com/questions/17537879/in-webgl-what-are-the-differences-between-an-attribute-a-uniform-and-a-varying).
+
+- Implementar opción de alternar la resolución llevándola a GPU. No debería convertirse a ImageData en cada step, pues esto es el cuello de botella que ping-pong (heat eq.) o buffer circular (wave eq.) trataría de resolver (alta carga de transferencia CPU-GPU), sino que lo óptimo es, si se está en GPU, renderizar directamente la textura en pantalla usando un quad de pantalla completa (sceneView), por ejemplo.
