@@ -162,7 +162,6 @@ function animate(time = 0) {
             
             if (time - lastTime > interval) {
                 currentImageData = solver.step();
-                updateVisuals(currentImageData);
                 needToUpdate = true;
                 lastTime = time;
             }
@@ -176,21 +175,24 @@ function animate(time = 0) {
             for (let i = 0; i < stepsPerFrame; i++) {
                 currentImageData = solver.step();
             }
-            updateVisuals(currentImageData);
             needToUpdate = true;
         }
     }
 
     if (needToUpdate) {
+        // Update simulation
+        updateVisuals(currentImageData);
         positionAttribute.needsUpdate = true;
         meshGeometry.computeVertexNormals();
         needToUpdate = false;
     }
 
+    // Render main scene
     renderer.render(scene, camera);
 
     stats.end();
 
+    // Request next frame immediately
     requestAnimationFrame(animate);
 }
 
@@ -223,7 +225,8 @@ function initializeSimulation() {
         pdeType: document.getElementById('pde-select').value || 'heat',
         boundaryType: document.getElementById('boundary-select').value || 'reflective',
         schemeType: document.getElementById('scheme-select').value || 'forward-euler',
-        useGPU: false
+        useGPU: false,
+        renderer: renderer
     });
 
     updateVisuals(currentImageData);

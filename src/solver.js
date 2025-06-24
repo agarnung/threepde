@@ -46,6 +46,7 @@ export class Solver {
         this.dt = dt;
         this.useGPU = useGPU;
         this.gpuReady = false;
+        this.renderer = renderer;
 
         // Parámetros específicos de PDEs
         this.c = 50.0;
