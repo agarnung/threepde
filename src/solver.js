@@ -280,7 +280,17 @@ export class Solver {
         return this.denormalizeToImageData(this.currentState);
     }
 
+    stepHeatEquationFE_GPU() {
+        // Enfoque ping-pong entre dos texturas (curr, next)
+        //...
+    }
+
     stepWaveEquationFE_GPU() {
+        // Enfoque array circular entre tres texturas (prev, curr, next)
+        //...
+    }
+
+    stepExpDecayEquationFE_GPU() {
         //...
     }
 
@@ -452,6 +462,9 @@ export class Solver {
         if (Object.values(Solver.PDE_TYPES).includes(newPdeType)) {
             this.pdeType = newPdeType;
             this.calculateCoefficient(); // Recalcular coeficiente
+
+            // Estemos o no usando GPU, recargar los shaders para tener los correctos cuando queramos usarla
+            //...
         } else {
             console.warn(`Tipo de PDE no válido: ${newPdeType}`);
         }
@@ -467,6 +480,9 @@ export class Solver {
 
     setUseGPU(useGPU) {
         this.useGPU = useGPU;
+
+        // Si no están creados, crear los renderTargets y todo lo relativo a la GPU
+        //...
     }
 
     calculateCoefficient() {
@@ -544,6 +560,9 @@ export class Solver {
         this.currentState = this.deepCopyMatrix(this.normalizeImageData(this.imageData));  // u_k = u_0
         this.previousState = this.deepCopyMatrix(this.currentState); // u_prev = u_k
         this.nextState = this.createZeroMatrix();
+
+        // resetear lo relativo a la GPU también...
+        //...
     }
     
 async loadShaders() {
