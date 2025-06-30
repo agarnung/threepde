@@ -4,6 +4,8 @@ A 3D visualization of image evolution under partial differential equations
 
 [![Deploy to GitHub Pages](https://github.com/agarnung/threepde/actions/workflows/deploy.yml/badge.svg?branch=main&event=page_build)](https://github.com/agarnung/threepde/actions/workflows/deploy.yml)
 
+[![](https://img.shields.io/badge/Three.js%20Forum-Visit-blue?style=for-the-badge)](https://discourse.threejs.org/t/3d-image-evolution-via-partial-differential-equations/84357)
+
 Want to know more about this field? Check many more interesting PDEs applied to images: [image-inpainting-app](https://www.researchgate.net/publication/387140474_Physics_Meets_Pixels_PDE_Models_in_Image_Processing/stats) and [Physics Meets Pixels: PDE Models in Image Processing](https://arxiv.org/abs/2412.11946).
 
 A few captures:
